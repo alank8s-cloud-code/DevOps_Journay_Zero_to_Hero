@@ -1,0 +1,22 @@
+# Stage 1 - Build
+
+FROM eclipse-temurin:21-jdk-alpine AS builder
+
+WORKDIR /app
+
+COPY PersonalInfo.java .
+
+RUN javac -d /app/package PersonalInfo.java 
+
+RUN jar cfe /app/app.jar PersonalInfo -C /app/package . 
+
+
+# Stage 2 - Runtime
+
+FROM gcr.io/distroless/java21-debian13
+
+WORKDIR /app
+
+COPY --from=builder /app/app.jar .
+
+ENTRYPOINT ["java","-jar","app.jar"]

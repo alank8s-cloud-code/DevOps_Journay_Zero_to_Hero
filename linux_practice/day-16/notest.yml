@@ -1,0 +1,122 @@
+#Shell Scripting Notes
+
+day: 16
+title: Shell Scripting Basics
+
+topics_learned:
+  - Shebang (#!/bin/bash)
+  - Variables
+  - echo command
+  - read command
+  - if-elif-else conditions
+  - Numeric comparisons
+  - String comparisons
+  - File existence checks
+  - Service status checks
+  - Script permissions
+
+scripts_created:
+  - hello.sh
+  - shebang.sh
+  - script1.sh
+  - script2.sh
+  - variables.sh
+  - greet.sh
+  - check_number.sh
+  - file_check.sh
+  - server_check.sh
+
+commands_practiced:
+  - mkdir practice
+  - cd practice
+  - vi <script_name>
+  - chmod u+x <script_name>
+  - ls
+  - ls -l
+  - cat <script_name>
+  - ./<script_name>
+  - sh <script_name>
+  - bash <script_name>
+  - echo $BASH_VERSION
+  - history
+
+key_concepts:
+
+  shebang:
+    what: "Specifies which interpreter should execute the script."
+    example: "#!/bin/bash"
+    learning: "Scripts can sometimes run without a shebang, but using one ensures the correct shell is used."
+
+  variables:
+    what: "Store values for later use."
+    examples:
+      - 'NAME="Suraj"'
+      - 'ROLE="DevOps Engineer"'
+    learning: "Variables reduce repetition and make scripts easier to maintain."
+
+  quotes:
+    double_quotes:
+      example: 'echo "Hello $NAME"'
+      output: "Variable value is expanded."
+
+    single_quotes:
+      example: "echo 'Hello $NAME'"
+      output: "Variable name is printed literally."
+
+  read:
+    what: "Accepts input from the user."
+    example: 'read -p "Enter your name: " name'
+
+  if_else:
+    what: "Used to make decisions in scripts."
+    example: |
+      if [ "$num1" -gt 0 ]; then
+          echo "Positive"
+      fi
+
+  numeric_operators:
+    - "-eq : Equal To"
+    - "-ne : Not Equal To"
+    - "-gt : Greater Than"
+    - "-lt : Less Than"
+    - "-ge : Greater Than or Equal To"
+    - "-le : Less Than or Equal To"
+
+  string_operators:
+    - "=  : Equal"
+    - "!= : Not Equal"
+    - "== : Equal (commonly used with [[ ]])"
+
+  file_check:
+    command: "-f"
+    purpose: "Checks whether a file exists and is a regular file."
+
+  service_check:
+    command: "systemctl is-active"
+    purpose: "Checks whether a service is active."
+
+mistakes_and_fixes:
+
+  - issue: "Used num instead of num1 in check_number.sh"
+    fix: "Use the same variable name throughout the script."
+
+  - issue: "Missing spaces around [ and ]"
+    fix: 'Correct format: [ "$num1" -gt "$num2" ]'
+
+  - issue: "Used -eq for string comparison"
+    fix: 'Use = for strings, e.g. [ "$check" = "y" ]'
+
+  - issue: "Missing fi at the end of if block"
+    fix: "Always close if statements with fi."
+
+takeaways:
+  - Always start Bash scripts with a shebang.
+  - Use meaningful variable names.
+  - Use double quotes around variables.
+  - Use read to accept user input.
+  - Use if-elif-else for decision making.
+  - Use -f to check file existence.
+  - Test scripts frequently while developing.
+  - Make scripts executable using chmod +x.
+
+status: completed

@@ -1,0 +1,3 @@
+Hi, this file is create by cat command and add some content.
+Devops is a good field for me.
+Daily practice with some good hands on commands.
