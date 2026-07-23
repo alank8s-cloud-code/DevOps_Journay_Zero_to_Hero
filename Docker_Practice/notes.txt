@@ -1,0 +1,950 @@
+============================================================
+ Docker Compose + Nginx + Backend Explained Notes
+ (What + Why + What Name to Use + Diagram)
+============================================================
+
+
+============================================================
+1. DOCKER COMPOSE BUILD
+============================================================
+
+
+WHAT?
+
+The "build" option tells Docker Compose to create an image
+from a Dockerfile.
+
+
+WHY?
+
+Because we have our own application code and dependencies.
+Docker needs instructions to create an image.
+
+
+Example:
+
+docker-compose.yml
+
+
+services:
+
+  backend:
+
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+
+
+Meaning:
+
+context:
+    Location of project files.
+
+
+dockerfile:
+    Which Dockerfile should be used.
+
+
+
+Flow:
+
+
+Project Files
+
+     |
+     |
+     v
+
+Dockerfile
+
+     |
+     |
+     v
+
+Docker Image
+
+     |
+     |
+     v
+
+Docker Container
+
+
+
+Command:
+
+docker compose up --build
+
+
+
+============================================================
+2. COPY IN DOCKERFILE
+============================================================
+
+
+Example:
+
+
+COPY default.conf /etc/nginx/conf.d/default.conf
+
+
+
+WHAT?
+
+Copies a file from your computer into the container.
+
+
+WHY?
+
+Because the container has its own filesystem.
+Your nginx configuration does not exist inside the
+container until you copy it.
+
+
+
+Format:
+
+
+COPY source destination
+
+
+
+Example:
+
+
+COPY default.conf /etc/nginx/conf.d/default.conf
+
+
+
+Source:
+
+default.conf
+
+(your project file)
+
+
+
+Destination:
+
+/etc/nginx/conf.d/default.conf
+
+(location inside nginx container)
+
+
+
+Flow:
+
+
+Your Computer
+
+default.conf
+
+      |
+      |
+      v
+
+NGINX Container
+
+/etc/nginx/conf.d/default.conf
+
+
+
+============================================================
+3. NGINX CONFIGURATION FILES
+============================================================
+
+
+Main nginx configuration:
+
+
+/etc/nginx/nginx.conf
+
+
+WHY?
+
+Contains global nginx settings.
+
+
+
+Server configuration:
+
+
+/etc/nginx/conf.d/default.conf
+
+
+WHY?
+
+Contains website/server rules.
+
+
+
+Example:
+
+
+server {
+
+    listen 80;
+
+}
+
+
+
+Meaning:
+
+
+NGINX accepts HTTP requests on port 80.
+
+
+
+============================================================
+4. SERVER BLOCK IN NGINX
+============================================================
+
+
+Example:
+
+
+server {
+
+    listen 80;
+
+    server_name localhost;
+
+
+}
+
+
+
+WHAT?
+
+Defines one website/server in nginx.
+
+
+WHY?
+
+Nginx can host multiple websites.
+Each website gets its own server block.
+
+
+
+Diagram:
+
+
+Client
+
+ |
+
+ v
+
+NGINX
+
+ |
+
+server block
+
+ |
+
+Application
+
+
+
+============================================================
+5. proxy_pass
+============================================================
+
+
+Example:
+
+
+proxy_pass http://backend;
+
+
+
+WHAT?
+
+Tells nginx where to send requests.
+
+
+WHY?
+
+Nginx receives the request first,
+then forwards it to Django/Flask.
+
+
+
+Without proxy_pass:
+
+
+Browser
+
+ |
+
+ v
+
+NGINX
+
+
+(request stops here)
+
+
+
+With proxy_pass:
+
+
+Browser
+
+ |
+
+ v
+
+NGINX
+
+ |
+
+ v
+
+Backend Application
+
+
+
+
+
+============================================================
+6. UPSTREAM IN NGINX
+============================================================
+
+
+Example:
+
+
+upstream django {
+
+
+    server django_app:8000;
+
+
+}
+
+
+
+WHAT?
+
+Creates a name/alias for backend servers.
+
+
+WHY?
+
+Instead of writing the backend address everywhere,
+we create one reusable name.
+
+
+
+Here:
+
+
+django
+
+=
+
+Nginx internal name
+
+
+
+django_app
+
+=
+
+Docker service name
+
+
+
+8000
+
+=
+
+Application port
+
+
+
+Mapping:
+
+
+django
+
+  |
+
+  v
+
+django_app:8000
+
+
+
+Use:
+
+
+proxy_pass http://django;
+
+
+
+Flow:
+
+
+Browser
+
+ |
+
+ v
+
+NGINX
+
+ |
+
+ v
+
+upstream django
+
+ |
+
+ v
+
+django_app:8000
+
+ |
+
+ v
+
+Django Container
+
+
+
+
+
+============================================================
+7. DOCKER COMPOSE SERVICE NAME
+============================================================
+
+
+Example:
+
+
+services:
+
+
+  django_app:
+
+    image: django
+
+
+
+WHAT?
+
+django_app is the service name.
+
+
+WHY?
+
+Docker Compose creates internal DNS using service names.
+
+
+
+Inside Docker network:
+
+
+django_app
+
+        |
+
+        v
+
+Django Container
+
+
+
+Use in nginx:
+
+
+proxy_pass http://django_app:8000;
+
+
+
+IMPORTANT:
+
+Use service names for container communication.
+
+
+
+============================================================
+8. CONTAINER NAME
+============================================================
+
+
+Example:
+
+
+services:
+
+
+ django:
+
+    container_name: django_cont
+
+
+
+WHAT?
+
+A fixed name given to a container.
+
+
+WHY?
+
+To easily identify the container manually.
+
+
+
+Example:
+
+
+docker exec -it django_cont bash
+
+
+
+Can nginx use it?
+
+
+Yes:
+
+
+proxy_pass http://django_cont:8000;
+
+
+
+BUT:
+
+
+Service name is preferred.
+
+
+
+Why?
+
+
+Because scaling becomes easier.
+
+
+
+============================================================
+9. DOCKER NETWORK
+============================================================
+
+
+WHAT?
+
+A private communication channel between containers.
+
+
+WHY?
+
+Containers need a way to talk with each other.
+
+
+
+Example:
+
+
+services:
+
+
+ backend:
+
+    networks:
+
+      - app-network
+
+
+
+ nginx:
+
+    networks:
+
+      - app-network
+
+
+
+
+Diagram:
+
+
+             app-network
+
+
+        +---------------+
+
+        |               |
+
+      nginx -------- backend
+
+
+        |               |
+
+        +---------------+
+
+
+
+Now nginx can reach backend.
+
+
+
+============================================================
+10. ENV_FILE
+============================================================
+
+
+Example:
+
+
+.env
+
+
+DB_HOST=mysql
+
+DB_USER=root
+
+DB_PASSWORD=12345
+
+
+
+docker-compose.yml:
+
+
+backend:
+
+  env_file:
+
+    - .env
+
+
+
+WHAT?
+
+Loads environment variables into container.
+
+
+WHY?
+
+Keep configuration and secrets outside code.
+
+
+
+Application:
+
+
+os.getenv("DB_HOST")
+
+
+
+gets:
+
+
+mysql
+
+
+
+============================================================
+11. WHAT IS HOST IN ENV FILE?
+============================================================
+
+
+Example:
+
+
+DB_HOST=mysql
+
+
+
+WHAT?
+
+The address of another service.
+
+
+
+WHY?
+
+Containers do not use localhost to talk to each other.
+
+
+
+Wrong:
+
+
+DB_HOST=localhost
+
+
+
+Because:
+
+
+backend container
+
+
+localhost
+
+   |
+
+   v
+
+backend itself
+
+
+
+Correct:
+
+
+DB_HOST=mysql
+
+
+
+Because:
+
+
+backend
+
+ |
+
+ v
+
+mysql container
+
+
+
+============================================================
+12. COMPLETE ARCHITECTURE
+============================================================
+
+
+
+                USER
+
+
+                 |
+
+                 v
+
+
+            NGINX :80
+
+
+                 |
+
+                 |
+
+          proxy_pass
+
+
+                 |
+
+                 v
+
+
+          BACKEND :8000
+
+
+                 |
+
+                 v
+
+
+             DATABASE
+
+
+
+Docker Compose:
+
+
+services:
+
+
+ nginx:
+
+    build: ./nginx
+
+
+
+ backend:
+
+    build: ./backend
+
+
+
+ mysql:
+
+    image: mysql
+
+
+
+
+
+Communication:
+
+
+nginx
+
+   |
+
+   | uses service name
+
+   v
+
+
+backend
+
+
+backend
+
+   |
+
+   | uses DB_HOST=mysql
+
+   v
+
+
+mysql
+
+
+
+
+
+============================================================
+FINAL RULES TO REMEMBER
+============================================================
+
+
+1.
+
+COPY
+
+WHAT?
+
+Move file into container.
+
+WHY?
+
+Container has separate filesystem.
+
+
+
+------------------------------------------------------------
+
+
+2.
+
+proxy_pass
+
+WHAT?
+
+Forward request.
+
+WHY?
+
+Connect nginx with application.
+
+
+
+------------------------------------------------------------
+
+
+3.
+
+upstream
+
+WHAT?
+
+Nginx backend group name.
+
+WHY?
+
+Easy management and load balancing.
+
+
+
+------------------------------------------------------------
+
+
+4.
+
+Service name
+
+WHAT?
+
+Docker Compose DNS name.
+
+WHY?
+
+Containers communicate using it.
+
+
+
+------------------------------------------------------------
+
+
+5.
+
+container_name
+
+WHAT?
+
+Fixed container name.
+
+WHY?
+
+Manual identification.
+
+Preferred less often.
+
+
+
+------------------------------------------------------------
+
+
+6.
+
+env_file
+
+WHAT?
+
+Load environment variables.
+
+WHY?
+
+Separate configuration from code.
+
+
+
+------------------------------------------------------------
+
+
+7.
+
+HOST
+
+WHAT?
+
+Address of another container.
+
+Usually:
+
+SERVICE_NAME
+
+
+
+Example:
+
+
+DB_HOST=mysql
+
+
+
+============================================================
+END
+============================================================
+
